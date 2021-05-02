@@ -1,0 +1,240 @@
+---
+title: "A Preprocessing analysis of clinical data of TCGA-KIRC patients and building a model with mrl3"
+output: 
+  github_document: 
+    df_print: paged
+    html_preview: FALSE
+    keep_html: FALSE
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_format = "all") })    
+---
+
+This project contains a pipeline for analysis of The Cancer Genome Atlas Kidney - Renal Clear Cell Carcinoma (TCGA-KIRC) clinical data, from [Genomic Data Commons Data Portal](https://portal.gdc.cancer.gov/exploration?filters=%7B%22op%22%3A%22and%22%2C%22content%22%3A%5B%7B%22op%22%3A%22in%22%2C%22content%22%3A%7B%22field%22%3A%22cases.project.project_id%22%2C%22value%22%3A%5B%22TCGA-KIRC%22%5D%7D%7D%5D%7D) and [cBioPortal](https://www.cbioportal.org/study/summary?id=kirp_tcga).
+
+In this section, the initial preprocessing is applied to clean the data and arrange following the Tidyverse philosophy. Exploratory Data Analysis summarizes their main characteristics. 
+
+
+```{r, error=TRUE, message=FALSE, warning=FALSE, purl=FALSE, results='hide'}
+# Avoid duplicate label error of knitr::purl
+options(knitr.duplicate.label = 'allow')
+# Code to browse the markdown file with renderized images.
+knitr::opts_chunk$set(
+  fig.path = "figs/1-prep_"
+)
+```
+
+
+# Intro
+
+First of all we are going to load required packages and the data. The data is part of the mlr3data package.
+
+
+```{r}
+
+if(!require("mlr3")){install.packages("mlr3")}
+
+if(!require("mlr3learners")){install.packages("mlr3learners")}
+
+if(!require("mlr3pipelines")){install.packages("mlr3pipelines")}
+
+if(!require("mlr3data")){install.packages("mlr3data")}
+
+if(!require("mlr3misc")){install.packages("mlr3misc")}
+
+if(!require("mlr3viz")){install.packages("mlr3viz")}
+
+if(!require("skimr")){install.packages("skimr")} # Compact and Flexible Summaries of Data
+
+if(!require("finalfit")){install.packages("finalfit")} #  Quickly Create Elegant Regression Results Tables and Plots when Modelling
+
+if(!require("tidyverse")){install.packages("tidyverse")} # R packages for data science
+
+if(!require("janitor")){install.packages("janitor")} # Simple Tools for Examining and Cleaning Dirty Data
+```
+
+# Loading data
+
+```{r}
+load("data/tcga_kirc.RData")
+
+#save(kirc_rna, kirc_snv, kirc_cli, file="data/tcga_kirc.RData", compress = T)
+
+```
+
+# Exploratory Data Analysis
+
+We can use the skimr package in order to get a first overview of the data:
+
+```{r}
+## clinical data size : 
+dim(kirc_cli)
+
+skimr::skim(kirc_cli)
+
+```
+
+
+## Cleaning data
+
+Select variables based on NA count (> 90% complete). 
+
+```{r}
+NA_cutoff <- nrow(kirc_cli)*0.9
+
+kirc_clean <- kirc_cli %>% 
+  dplyr::select_if(colSums(!is.na(.)) > NA_cutoff)
+
+```
+
+Checking duplicate observations:
+
+```{r}
+kirc_clean <- kirc_clean %>%
+     distinct_at('submitter_id', .keep_all = TRUE)
+```
+
+Checking duplicate columns observations, transpose the dataframe and then check for duplicates.
+
+```{r}
+names(kirc_clean)[duplicated(t(kirc_clean))]
+
+kirc_clean <- kirc_clean %>% 
+ dplyr::select(!names(kirc_clean)[duplicated(t(kirc_clean))])
+```
+
+Remove variables with unique observations:
+
+```{r}
+kirc_clean <- kirc_clean %>% 
+  dplyr::select_if(~length(unique(.)) > 1)
+```
+
+Checking columns with others identifiers: 
+
+```{r}
+kirc_clean %>% 
+  dplyr::select_if(~length(unique(.)) > nrow(kirc_clean)*0.80) %>%
+  names(.)
+```
+
+Removing columns with similar information - check each one!
+
+```{r}
+
+kirc_clean <- kirc_clean %>% 
+  dplyr::select(!c("case_id", "days_to_birth", "age_at_diagnosis", "submitter_id.samples", "bcr_followup_barcode", "bcr_followup_uuid", "file_uuid", "patient_id"))
+  
+
+```
+
+Checcking correlated on numeric columns:
+
+```{r}
+ kirc_clean %>% 
+  select_if(is.numeric) %>%
+  cor(.) %>%
+  as.data.frame() %>%
+  mutate(var1 = rownames(.)) %>%
+  gather(var2, value, -var1) %>%
+  filter(var1 != var2 )  %>%
+  arrange(desc(value))
+
+```
+
+Checking correlated on non-numeric columns:
+
+```{r}
+## Convert data.frame to a matrix with a convenient structure
+l <- kirc_clean %>% 
+  select_if(is.character)  %>% 
+  lapply(., function(X) as.numeric(factor(X, levels=unique(X))))
+
+## (have a look at m to see where this is headed)
+m <- as.matrix(data.frame(l))
+
+## Identify pairs of perfectly correlated columns    
+M <- (abs(cor(m,m))>0.8)
+M[lower.tri(M, diag=TRUE)] <- FALSE
+
+## Extract the names of the redundant columns
+colnames(M)[colSums(M, na.rm = T)>0]
+
+
+```
+
+Removing variables:
+
+```{r}
+rm(list=setdiff(ls(), c("kirc_clean", "kirc_rna", "kirc_snv")))
+```
+
+Removing correlated columns:
+
+```{r}
+
+kirc_clean <- kirc_clean %>% 
+  dplyr::select(!c("year_of_birth", "tissue_source_site", "vital_status.demographic"))
+
+```
+
+```{r}
+kirc_clean <- kirc_clean %>% 
+  dplyr::rename(c(age = "age_at_initial_pathologic_diagnosis"), 
+                c(grade = "neoplasm_histologic_grade"),
+                c(metastasis= "pathologic_M"),
+                c(neoplasm = "pathologic_N"),
+                c(stage = "pathologic_T"),
+                ) %>% 
+  dplyr::mutate_if(is_character, as_factor) %>% 
+  dplyr::mutate(stage = fct_collapse(stage,
+                             T1 = c('T1', 'T1a', 'T1b'),
+                             T2 = c('T2', 'T2a', 'T2b'),
+                             T3 = c('T3', 'T3a', 'T3b'),
+                             T4 = c('T4')),
+                race = fct_recode(race, black='black or african american')
+                ) 
+```
+
+
+
+
+```{r}
+skimr::skim(kirc_clean)
+```
+
+
+```{r}
+ggplot(kirc_clean, aes(age)) +
+     geom_histogram(bins = 20, alpha = 0.8, color = "red")
+
+ggplot(kirc_clean, aes(event_time)) +
+     geom_histogram(bins = 20, alpha = 0.8, color = "red")
+```
+
+
+```{r}
+
+dim(kirc_rna)
+
+skimr::skim(kirc_rna[,c(1:40)])
+```
+
+# Single Nucleotide Variant (SNV)
+
+```{r}
+
+dim(kirc_snv)
+
+skimr::skim(kirc_snv)
+```
+
+# A first model
+
+```{r}
+
+```
+
+```{r}
+
+```
+
