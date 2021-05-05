@@ -39,6 +39,7 @@ vignettes/*.pdf
 .Renviron
 
 # Ignore files
+.Rprofile
 misc/*
 data/kirc_counts.tsv.gz
 data/kirc_clinical.tsv.gz
