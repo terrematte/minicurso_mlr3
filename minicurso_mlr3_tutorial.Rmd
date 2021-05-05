@@ -335,8 +335,15 @@ instance = FSelectInstanceSingleCrit$new(
 # Modifies the instance by reference ----
 fselector = fs("rfe", min_features=10)
 
-fselector$optimize(instance)
+```
 
+
+```{r message=FALSE, warning=FALSE}
+fselector$optimize(instance)
+```
+
+
+```{r}
 print(instance$result_y)
 
 tsk_rfe <- TaskClassif$new(id="kirc_rfe", 
@@ -348,6 +355,7 @@ tsk_rfe <- TaskClassif$new(id="kirc_rfe",
 tsk_rfe$select(cols = instance$result_feature_set)
 tsk_rfe
 ```
+
 
 ```{r}
 
