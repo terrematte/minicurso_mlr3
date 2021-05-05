@@ -13,7 +13,7 @@ This project contains a pipeline for analysis of The Cancer Genome Atlas Kidney 
 
 
 
-```{r, error=TRUE, message=FALSE, warning=FALSE, purl=FALSE, results='hide'}
+```{r error=TRUE, message=FALSE, warning=FALSE, include=FALSE, purl=FALSE, results='hide'}
 # Avoid duplicate label error of knitr::purl
 
 options(knitr.duplicate.label = 'allow')
@@ -135,7 +135,7 @@ dim(kirc_rna)
 ```
 
 
-```{r, out.width = "200px"}
+```{r, out.width = "400px"}
 futile.logger::flog.threshold(futile.logger::ERROR, name = "VennDiagramLogger")
 
 venn.diagram(
@@ -186,7 +186,7 @@ https://mlr3extralearners.mlr-org.com/articles/learners/list_learners.html
 
 
 ```{r}
-head(kirc_data[,c(1:4)])
+head(kirc_data[,c(1:4)])  %>% knitr::kable(.)
 
 tsk_raw <- TaskClassif$new(id="kirc_raw", 
                            backend = kirc_data, 
@@ -198,7 +198,7 @@ p_bc = po("boxcox",
 
 kirc_norm = p_bc$train(list(tsk_raw))$output$data()
 
-head(kirc_norm[,c(1:4)])
+head(kirc_norm[,c(1:4)])  %>% knitr::kable(.)
 
 tsk_cla <- TaskClassif$new(id="kirc_cla", 
                            backend = kirc_norm, 
@@ -307,7 +307,7 @@ filter = flt("importance", learner = lrn)
 
 filter$calculate(tsk_filt)
 
-head(as.data.table(filter), 20)
+head(as.data.table(filter), 20)  %>% knitr::kable(.)
 
 cols <- head(as.data.table(filter), 20)$feature
 
@@ -345,7 +345,7 @@ fselector = fs("rfe", min_features=10)
 
 
 ```{r message=FALSE, warning=FALSE}
-fselector$optimize(instance)
+fselector$optimize(instance)  
 ```
 
 
@@ -396,7 +396,7 @@ bmr_df <- bmr$aggregate(measures) %>%
   dplyr::select(cols) %>%
   dplyr::arrange(desc(classif.bacc))
 
-bmr_df
+bmr_df  %>% knitr::kable(.)
 ```
 
 
@@ -499,8 +499,7 @@ bmr_df <- bmr$aggregate(measures) %>%
   dplyr::select(cols) %>%
   dplyr::arrange(desc(classif.bacc))
 
-bmr_df
-
+bmr_df  %>% knitr::kable(.)
 ```
 
 # Plotting Benchmark Results
