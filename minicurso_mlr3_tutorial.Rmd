@@ -111,17 +111,24 @@ We also selected all genes mapped from Kegg:
 
 https://www.genome.jp/dbget-bin/www_bget?path:map05211  
 
-
 ```{r}
-
 genes_DEA_M1 <- readLines("data/dea.M0.M1.lst")
 genes_papers <- readLines("data/genes_papers.lst")
 genes_kegg <- readLines("data/genes_kegg.lst")
+```
 
-genes <- union(genes_DEA_M1, union(names(genes_papers), names(genes_kegg)))
+Here, we selected top 50 features having the highest gene-wise variances of genes_papers and genes_kegg in order to decrease computational cost.
+
+```{r}
+
+genes_id <- colnames(kirc_rna) %in% union(genes_papers, genes_kegg)
+vars <- sort(apply(t(kirc_rna[, genes_id]), 1, var, na.rm = TRUE), decreasing = TRUE)[1:50]
+
+genes <- union(genes_DEA_M1,names(vars))
+genes_id <- colnames(kirc_rna) %in% genes
 patients_id <-  rownames(kirc_rna) %in% rownames(kirc_cli)
   
-kirc_rna <- kirc_rna[patients_id, genes] 
+kirc_rna <- kirc_rna[patients_id, genes_id] 
 
 dim(kirc_rna)
 
@@ -167,7 +174,6 @@ Selecting the data to classify metastasis
 ```{r}
 kirc_data <- as.data.frame(kirc_rna)
 kirc_data$metastasis <- kirc_cli$metastasis
-
 ```
 
 
@@ -324,7 +330,7 @@ tsk_rfe <- TaskClassif$new(id="rfe_part",
 terminator = trm("evals", n_evals = 100)
 
 instance = FSelectInstanceSingleCrit$new(
-  task = tsk_cla,
+  task = tsk_rfe,
   learner = lrn("classif.rpart"),
   resampling = rsmp("cv", folds = 5),
   measure = msr("classif.bacc"),
@@ -419,7 +425,6 @@ fselector = fs("random_search")
 lrn.rpa = lrn("classif.rpart")
 lrn.xgb = lrn("classif.xgboost")
 lrn.ranger = lrn("classif.ranger")
-lrn.ksvm = lrn("classif.ksvm")
 lrn.svm = lrn("classif.svm")
 
 
@@ -455,13 +460,6 @@ at.svm = AutoFSelector$new(
   fselector = fselector
 )
 
-at.ksvm = AutoFSelector$new(
-  learner = lrn.ksvm,
-  resampling = rsmp("holdout"),
-  measure = msr("classif.bacc"),
-  terminator = terminator,
-  fselector = fselector
-)
 
 ```
 
@@ -476,7 +474,7 @@ tsk_cla <- TaskClassif$new(id="kirc_cla",
 
 grid = benchmark_grid(
   task = tsk_cla,
-  learner = list(at.rpa, at.xgb, at.ranger, at.svm, at.ksvm),
+  learner = list(at.rpa, at.xgb, at.ranger, at.svm),
   resampling = rsmp("cv", folds = 3)
 )
 
