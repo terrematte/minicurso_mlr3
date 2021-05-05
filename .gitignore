@@ -37,3 +37,11 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# Ignore files
+misc/*
+data/kirc_counts.tsv.gz
+data/kirc_clinical.tsv.gz
+data/kirc_gistic.tsv.gz 
+data/kirc_survival.tsv
+data/kirc_probemap.tsv

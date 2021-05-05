@@ -1,0 +1,188 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r, error=TRUE, message=FALSE, warning=FALSE, purl=FALSE, results='hide'}
+# Avoid duplicate label error of knitr::purl
+options(knitr.duplicate.label = 'allow')
+```
+
+# Intro
+
+First of all we are going to load required packages and the data. The data is part of the mlr3data package.
+
+
+```{r message=FALSE, warning=FALSE}
+
+if(!require("tidyverse")){install.packages("tidyverse")} # R packages for data science
+
+```
+
+
+# Downloading TCGA-KIRC clinical data from Xenabrowser
+
+
+```{r}
+# Survival data
+# https://xenabrowser.net/datapages/
+
+#url <- "https://gdc-hub.s3.us-east-1.amazonaws.com/download/TCGA-KIRC.survival.tsv"
+destfile <- "../data/kirc_survival.tsv"
+#download.file(url, destfile)
+kirc_sur <- read_tsv(destfile)
+
+kirc_sur <- kirc_sur %>% 
+  column_to_rownames("sample") %>% 
+  dplyr::rename(status = OS, obs.time = OS.time, patient_id = '_PATIENT')
+  
+#kirc_sur <- as.data.frame(kirc_sur)
+
+# Transform days to months? / 30.43945
+
+# Phenotype Clinical data
+# https://xenabrowser.net/datapages/?dataset=TCGA-KIRC.GDC_phenotype.tsv&host=https%3A%2F%2Fgdc.xenahubs.net&removeHub=https%3A%2F%2Fxena.treehouse.gi.ucsc.edu%3A443
+#url <- "https://gdc-hub.s3.us-east-1.amazonaws.com/download/TCGA-KIRC.GDC_phenotype.tsv.gz"
+destfile <- "../data/kirc_clinical.tsv.gz"
+#download.file(url, destfile)
+kirc_cli <- read_tsv(gzfile(destfile))
+
+kirc_cli <- kirc_cli %>%
+  dplyr::select(c("submitter_id.samples","prior_malignancy.diagnoses","age_at_initial_pathologic_diagnosis", "gender.demographic", "race.demographic",
+           "sample_type_id.samples", "pathologic_M", "pathologic_N", "pathologic_T")) %>% 
+  dplyr::rename(sample = 'submitter_id.samples', 
+         prior.dx = 'prior_malignancy.diagnoses', 
+         age = 'age_at_initial_pathologic_diagnosis', 
+         gender = 'gender.demographic',
+         race = "race.demographic",
+         sample.type = 'sample_type_id.samples',
+         metastasis = 'pathologic_M',
+         neoplasm = 'pathologic_N',
+         ajcc.stage = 'pathologic_T') %>% 
+  mutate(sample.type = str_replace_all(sample.type, "01", "TP") ) %>% 
+  mutate(sample.type = str_replace_all(sample.type, "11", "NT") ) %>% 
+  dplyr::filter(sample.type %in% c("TP", "NT")) %>%  
+  dplyr::filter(sample %in% row.names(kirc_sur)) %>% 
+  column_to_rownames("sample") %>% 
+  mutate_if(is.character,as.factor)
+  
+kirc_cli <- cbind(kirc_cli, kirc_sur[rownames(kirc_cli),])
+
+rm(kirc_sur)
+
+```
+
+
+# Downloading TCGA-KIRC counts from Xenabrowser
+
+```{r}
+# cohort: GDC TCGA Kidney Clear Cell Carcinoma (KIRC)
+# https://xenabrowser.net/datapages/
+       
+#url <- "https://gdc-hub.s3.us-east-1.amazonaws.com/download/TCGA-KIRC.htseq_counts.tsv.gz"
+destfile <- "../data/kirc_counts.tsv.gz"
+#download.file(url, destfile)
+kirc_rna <- read_tsv(gzfile(destfile))
+kirc_rna <- as.data.frame(kirc_rna)
+row.names(kirc_rna) <- kirc_rna$Ensembl_ID
+
+#url <- "https://gdc-hub.s3.us-east-1.amazonaws.com/download/gencode.v22.annotation.gene.probeMap"
+destfile <- "../data/kirc_probemap.tsv"
+#download.file(url, destfile)
+kirc_probe <- read_tsv(destfile)
+kirc_probe <- as.data.frame(kirc_probe)
+row.names(kirc_probe) <- kirc_probe$id
+  
+all(stringi::isUnique(kirc_probe$id))
+
+kirc_rna  <- kirc_rna %>%
+  dplyr::filter(Ensembl_ID %in% kirc_probe$id) %>%
+  mutate(gene =  kirc_probe[Ensembl_ID, c("gene")])  %>%
+  dplyr::distinct(gene, .keep_all = T) %>%
+  dplyr::select(!c("Ensembl_ID")) %>%
+  remove_rownames() %>%
+  column_to_rownames("gene")
+
+kirc_rna <- 2^(kirc_rna)-1
+kirc_rna <- round(kirc_rna, digits = 0)
+
+kirc_rna <- t(kirc_rna)
+
+
+
+```
+
+# Downloading TCGA-KIRC copy number (gene-level)
+
+cohort: GDC TCGA Kidney Clear Cell Carcinoma (KIRC)  
+https://xenabrowser.net/datapages/  
+
+```{r}
+
+#url <- "https://gdc-hub.s3.us-east-1.amazonaws.com/download/TCGA-KIRC.gistic.tsv.gz"
+destfile <- "../data/kirc_gistic.tsv.gz"
+#download.file(url, destfile)
+kirc_gis <- read_tsv(gzfile(destfile))
+
+kirc_gis <- as.data.frame(kirc_gis)
+
+kirc_gis  <- kirc_gis %>%
+  dplyr::filter(`Gene Symbol` %in% probeMap$id) %>%
+  dplyr::select_if(!grepl("_1$", names(.))) %>%
+  mutate(gene =  probeMap[`Gene Symbol`, c("gene")])  %>%
+  dplyr::distinct(gene, .keep_all = T) %>%
+  dplyr::select(!c("Gene Symbol")) %>%
+  remove_rownames() %>%
+  column_to_rownames("gene")
+
+rm(list=setdiff(ls(), c("kirc_cli", "kirc_rna", "kirc_gis")))
+
+```
+
+
+# Filtering data for didactical purposes and simplify the binary metastasis Classification
+
+```{r}
+
+kirc_cli <- kirc_cli[kirc_cli$sample.type =="TP", ]
+
+kirc_cli$sample.type <- NULL
+
+kirc_cli$vital_status <- ifelse(kirc_cli$status ==0, "alive", "deceased")
+
+# Remove patients without metastasis that died and with stage > T1
+kirc_cli <- kirc_cli[kirc_cli$metastasis == "M1" | kirc_cli$vital_status =="alive", ]
+kirc_cli <- kirc_cli[kirc_cli$metastasis == "M1" | (kirc_cli$ajcc.stage %in% c("T1","T1a", "T1b")), ]
+
+rows <- (rownames(kirc_rna)  %in% rownames(kirc_cli))
+kirc_rna <- kirc_rna[rows, ]
+
+kirc_cli <- kirc_cli[rownames(kirc_rna), ]
+
+kirc_cli <- kirc_cli %>% 
+  distinct_at('patient_id', .keep_all = TRUE)   %>%
+  dplyr::mutate(ajcc.stage = fct_collapse(ajcc.stage, # T1a: 118, T1b: 93, T3a: 40, T1: 16
+                                          T1 = c('T1', 'T1a', 'T1b'),
+                                          T2 = c('T2', 'T2b'),
+                                          T3 = c('T3', 'T3a', 'T3b'),
+                                          T4 = c('T4')),
+                race = fct_recode(race,
+                                  black='black or african american')) %>%
+    droplevels()
+
+
+rm(list=setdiff(ls(), c("kirc_cli", "kirc_rna")))
+
+```
+
+
+
+```{r}
+#load("../data/tcga_kirc.RData")
+
+kirc_cli$sample.type <- NULL
+
+save(kirc_rna, kirc_cli, file="../data/tcga_kirc.RData", compress = T)
+
+```

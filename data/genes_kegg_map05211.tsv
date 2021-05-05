@@ -1,0 +1,79 @@
+# https://www.genome.jp/dbget-bin/get_linkdb?-t+orthology+path:map05211
+ID;Gene;Description
+K00922;PIK3CA;phosphatidylinositol-4,5-bisphosphate 3-kinase catalytic subunit alpha/beta/delta [EC:2. 
+K01679;E4.2.1.2B;fumC, FH fumarate hydratase, class II [EC:4.2.1.2] 
+K02158;BAD;Bcl-2-antagonist of cell death 
+K02649;PIK3R1;phosphoinositide-3-kinase regulatory subunit alpha/beta/delta 
+K02678;ETS1;pnt C-ets-1 
+K02833;HRAS;GTPase HRas 
+K03099;SOS;son of sevenless 
+K03868;RBX1;E3 ubiquitin-protein ligase RBX1 [EC:2.3.2.32] 
+K03868;ROC1;E3 ubiquitin-protein ligase RBX1 [EC:2.3.2.32]
+K03870;CUL2;cullin 2 
+K03871;VHL;von Hippel-Lindau disease tumor supressor 
+K03872;TCEB1;elongin-C 
+K03873;TCEB2;elongin-B 
+K04353;RAP1A;Ras-related protein Rap-1A 
+K04364;GRB2;growth factor receptor-bound protein 2 
+K04365;BRAF;B-Raf proto-oncogene serine/threonine-protein kinase [EC:2.7.11.1] 
+K04366;RAF1;RAF proto-oncogene serine/threonine-protein kinase [EC:2.7.11.1] 
+K04368;MAP2K1;mitogen-activated protein kinase kinase 1 [EC:2.7.12.2] 
+K04368;MEK1;mitogen-activated protein kinase kinase 1 [EC:2.7.12.2] 
+K04369;MAP2K2;mitogen-activated protein kinase kinase 2 [EC:2.7.12.2]
+K04369;MEK2;mitogen-activated protein kinase kinase 2 [EC:2.7.12.2] 
+K04371;ERK;mitogen-activated protein kinase 1/3 [EC:2.7.11.24]
+K04371;MAPK1_3;mitogen-activated protein kinase 1/3 [EC:2.7.11.24] 
+K04392;RAC1;Ras-related C3 botulinum toxin substrate 1 
+K04393;CDC42;cell division control protein 42 
+K04409;PAK1;p21-activated kinase 1 [EC:2.7.11.1] 
+K04410;PAK2;p21-activated kinase 2 [EC:2.7.11.1] 
+K04438;CRK;C-crk adapter molecule crk
+K04438;CRKII;C-crk adapter molecule crk 
+K04448;JUN;transcription factor AP-1 
+K04456;RAC;serine/threonine-protein kinase [EC:2.7.11.1]
+K04456;AKT;serine/threonine-protein kinase [EC:2.7.11.1] 
+K04498;EP300;E1A/CREB-binding protein [EC:2.3.1.48]
+K04498;CREBBP;E1A/CREB-binding protein [EC:2.3.1.48]
+K04498;KAT3;E1A/CREB-binding protein [EC:2.3.1.48] 
+K05099;MET;proto-oncogene tyrosine-protein kinase Met [EC:2.7.10.1]
+K05099;HGFR;proto-oncogene tyrosine-protein kinase Met [EC:2.7.10.1] 
+K05448;VEGFA;vascular endothelial growth factor A 
+K05460;HGF;hepatocyte growth factor 
+K05733;PAK3;p21-activated kinase 3 [EC:2.7.11.1] 
+K05733;MRX30;p21-activated kinase 3 [EC:2.7.11.1]
+K05734;PAK4;p21-activated kinase 4 [EC:2.7.11.1] 
+K05735;PAK6;p21-activated kinase 6 [EC:2.7.11.1] 
+K05736;PAK5;p21-activated kinase 5 [EC:2.7.11.1]
+K05736;PAK7;p21-activated kinase 5 [EC:2.7.11.1] 
+K06277;GRF2;Rap guanine nucleotide exchange factor 1
+K06277;RAPGEF1;Rap guanine nucleotide exchange factor 1 
+K06277;GRF2;Rap guanine nucleotide exchange factor 1 
+K06625;CDKN1A;cyclin-dependent kinase inhibitor 1A
+K06625;P21;cyclin-dependent kinase inhibitor 1A
+K06625;CIP1;cyclin-dependent kinase inhibitor 1A 
+K07293;PTPN11;tyrosine-protein phosphatase non-receptor type 11 [EC:3.1.3.48] 
+K07299;SLC2A1;MFS transporter, SP family, solute carrier family 2 (facilitated glucose transporter)
+K07299;GLUT1;MFS transporter, SP family, solute carrier family 2 (facilitated glucose transporter) 
+K07827;KRAS;GTPase KRas
+K07827;KRAS2;GTPase KRas 
+K07828;NRAS;GTPase NRas 
+K07836;RAP1B;Ras-related protein Rap-1B 
+K08268;HIF1A;hypoxia-inducible factor 1 alpha 
+K08774;TGFA;transforming growth factor, alpha 
+K08845;ARAF1;A-Raf proto-oncogene serine/threonine-protein kinase [EC:2.7.11.1]
+K08845;ARAF;A-Raf proto-oncogene serine/threonine-protein kinase [EC:2.7.11.1] 
+K09095;HIF2A;hypoxia-inducible factor 2 alpha
+K09095;EPAS1;hypoxia-inducible factor 2 alpha 
+K09097;ARNT;aryl hydrocarbon receptor nuclear translocator 
+K09105;TFE3;transcription factor E3 
+K09592;EGLN;hypoxia-inducible factor prolyl hydroxylase [EC:1.14.11.29]
+K09592;HPH;hypoxia-inducible factor prolyl hydroxylase [EC:1.14.11.29] 
+K09593;GAB1;GRB2-associated-binding protein 1 
+K09594;FLCN;folliculin
+K09594;BHD;folliculin 
+K13105;PRCC;proline-rich protein PRCC 
+K13375;TGFB1;transforming growth factor beta-1 
+K13376;TGFB2;transforming growth factor beta-2 
+K13377;TGFB3;transforming growth factor beta-3 
+K15589;ARNT2;aryl hydrocarbon receptor nuclear translocator 2 
+K17386;PDGFB;platelet-derived growth factor subunit B 
