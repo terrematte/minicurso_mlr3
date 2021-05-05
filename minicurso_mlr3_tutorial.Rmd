@@ -15,7 +15,9 @@ This project contains a pipeline for analysis of The Cancer Genome Atlas Kidney 
 
 ```{r error=TRUE, message=FALSE, warning=FALSE, include=FALSE, purl=FALSE, results='hide'}
 # Avoid duplicate label error of knitr::purl
-
+lgr::get_logger("mlr3")$set_threshold("warn")
+lgr::get_logger("bbotk")$set_threshold("warn")
+options("lgr.default_threshold"=300)
 options(knitr.duplicate.label = 'allow')
 # Code to browse the markdown file with renderized images.
 knitr::opts_chunk$set(
@@ -340,11 +342,11 @@ instance = FSelectInstanceSingleCrit$new(
 
 # Modifies the instance by reference ----
 fselector = fs("rfe", min_features=10)
-
+#fselector$optimize(instance)  
 ```
 
 
-```{r message=FALSE, warning=FALSE}
+```{r include=FALSE, paged.print=FALSE}
 fselector$optimize(instance)  
 ```
 
@@ -364,7 +366,6 @@ tsk_rfe
 
 
 ```{r}
-
 lrn.rpa = lrn("classif.rpart")
 lrn.xgb = lrn("classif.xgboost")
 lrn.rgn = lrn("classif.ranger")
@@ -376,9 +377,10 @@ grid = benchmark_grid(
   resampling = rsmp("cv", folds = 3)
 )
 
+#bmr = benchmark(grid, store_models = TRUE)
 ```
 
-```{r, message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, include=FALSE}
 bmr = benchmark(grid, store_models = TRUE)
 ```
 
