@@ -8,4 +8,4 @@ No presente minicurso¹, vamos construir um pipeline de aprendizagem de máquina
 
 ¹ Apresentado em https://inovacaosaude.imd.ufrn.br/.
 
-² Disponível em https://mlr3book.mlr-org.com/introduction.html.
+² Disponível em https://mlr3book.mlr-org.com/
